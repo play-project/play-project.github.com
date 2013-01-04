@@ -1,0 +1,135 @@
+<html>
+    <head>
+        <title>Play Event Marketplace Project Open-Source repositories</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> 
+        <link type='image/vnd.microsoft.icon' rel='shortcut icon' href='favicon.ico'/>
+        <link type="text/css" rel="stylesheet" href="bootstrap/css/bootstrap.min.css"/>
+        <link type="text/css" rel="stylesheet" href="style.css">
+        <script type="text/javascript" src="jquery-1.7.1.min.js"></script>
+        <script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
+        <script type="text/javascript">
+function byName(a, b){
+    var aName = a.name.toLowerCase();
+    var bName = b.name.toLowerCase(); 
+    return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
+}
+
+function byDate(a, b){
+    var aName = new Date(a.updated_at);
+    var bName = new Date(b.updated_at); 
+    return ((aName < bName) ? 1 : ((aName > bName) ? -1 : 0));
+}
+
+function loadRepos(data, textStatus, jqXHR){
+    var container = jQuery("#container");
+    var row = null;
+    var repositories = data.data;
+    repositories.sort(byName);
+	jQuery.each(repositories, function(i, repo){
+		if((i % 3) == 0){
+			if(row != null)
+				row.appendTo(container);
+			row = jQuery("<div class='repos row show-grid'/>");
+		}
+		addRepo(row, repo);
+	});
+    if(row != null)
+        row.appendTo(container);
+    jQuery("#repositories").text(plural(repositories.length, " repository", " repositories"));
+    repositories.sort(byDate);
+    var updated = jQuery("#updated");
+    jQuery.each(repositories.slice(0, 3), function(i, repo){
+    	var div = jQuery("<div/>");
+    	jQuery("<a/>").attr({href: repo.html_url, title: "View project on GitHub"}).text(repo.name).appendTo(div);
+    	div.append(" ");
+    	repoInfo(repo).appendTo(div);
+    	div.appendTo(updated);
+    });
+}
+
+function date(text){
+	var d = new Date(text);
+	return d.getDate() + "/" + (d.getMonth()+1) +"/"+ d.getFullYear();
+}
+
+function plural(count, text, pluralText){
+	if(count > 1)
+	    return pluralText ? count + pluralText : count + text + "s";
+    return count + text;
+}
+
+function repoInfo(repo){
+    var sub = jQuery("<div class='sub'/>");
+    jQuery("<a/>").attr({href: repo.html_url+"/issues", title: "Issue tracker"}).text(plural(repo.open_issues," issue")).appendTo(sub);
+    sub.append(" ⋅ ");
+    jQuery("<a/>").attr({href: repo.html_url+"/watchers", title: "View watchers"}).text(plural(repo.watchers, " watcher")).appendTo(sub);
+    sub.append(" ⋅ ");
+    jQuery("<a/>").attr({href: repo.html_url+"/network", title: "Fork list"}).text(plural(repo.forks, " fork")).appendTo(sub);
+    sub.append(" ⋅ ");
+    jQuery("<a/>").attr({href: repo.html_url+"/commits", title: "Last commit"}).text(date(repo.updated_at)).appendTo(sub);
+    return sub;
+}
+
+function addRepo(container, repo){
+	var span = jQuery("<div class='span4' title='Click to view project on GitHub''/>");
+	var div = jQuery("<div class='repo'/>").appendTo(span);
+	
+	jQuery("<h3/>").text(repo.name).appendTo(div);
+    jQuery("<p/>").text(repo.description).appendTo(div);
+
+    repoInfo(repo).appendTo(div);
+    
+    var fork = jQuery("<a/>").attr({href: repo.html_url+"/fork_select", title: "Fork on GitHub"}).appendTo(div);
+    jQuery("<i class='icon-share-alt'></i>").appendTo(fork);
+    fork.append("Fork");
+    
+    div.click(function(){
+    	document.location = repo.html_url;
+    });
+    
+    container.append(span);
+}
+
+function loadMembers (result) {
+    var members = result.data;
+
+    jQuery("#members").text(plural(members.length, " member"));
+}
+
+jQuery(function (){
+    jQuery.getJSON("https://api.github.com/orgs/play-project/repos?callback=?", loadRepos);
+    jQuery.getJSON("https://api.github.com/orgs/play-project/members?callback=?", loadMembers);
+});
+        </script>
+    </head>
+    <body>
+        <div class="container" id="container">
+            <div class='page-header'>
+                <a href="http://play.ow2.org" title="Go to Play home page"><img src="play.png" alt="Play Logo" class="logo"/></a>
+                <h1>Play Event Marketplace Project Repositories</h1>
+                <p class="lead">
+                    The Play Event Marketplace is open-source software, you can find here all the repositories related to Play.
+                    Fork at will :)
+                </p>
+                <p class="links">
+                    <a href="http://play.ow2.org" title="Go to Play home page"><i class="icon-home"></i>Play documentation</a>.
+                </p>
+            </div>
+            <div class="row show-grid">
+                <div class="span4">
+                    <div class="box">
+                        <h3>Statistics</h3>
+                        <div><a href="https://github.com/play-project/repositories" title="View all Play repositories on GitHub" id="repositories"></a></div>
+                        <div><a href="https://github.com/play-project" title="View Play members on GitHub" id="members"></a></div>
+                    </div>
+                </div>
+                <div class="span8">
+                    <div class="box">
+                        <h3>Recently updated <a href="https://github.com/play-project/repositories" title="View all Play repositories on GitHub">View all</a></h3>
+                        <div id="updated"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
